@@ -1,0 +1,134 @@
+6217 0023 4001 0843 425 
+6217 8560 0004 6258 512
+安全联盟认证，近期买一赠一活动，吴女士，15930279887，qq:2853272350
+微信公众号
+AppID(应用ID)wxcc7d895141ab150e
+AppSecret(应用密钥)a6f1a88efc3f308a2b24a31c81abd4a7 
+服务号
+AppID(应用ID)wx29fa2de75143afb5
+AppSecret(应用密钥)a5650f175522bbcdae582523c3e98b71
+
+极验验证 service@caiyuweb.com 123456
+杨戬
+320113196912021517
+6210981000021065555
+手机短信平台  
+http://self.zucp.net/default.htm  SDK-WSS-010-07751 密码：CAIYUweb777 
+
+CaIyU@Web!_SoCOOL
+/*查询用户*/
+select 
+a.id,
+a.user_name as 用户名,
+b.real_name as 真实姓名,
+a.user_phone as 手机号,
+b.idcard as 身份证号,
+a.reg_time as 时间戳,
+FROM_UNIXTIME(a.reg_time) as 注册时间,
+(select sum(money) from lzh_member_payonline where uid=a.id and status=1) as 充值金额,
+(select sum(investor_capital) from lzh_borrow_investor where investor_uid=a.id)+
+(select sum(investor_capital) from lzh_transfer_borrow_investor where investor_uid=a.id) as 投资金额,
+(select sum(balance) from lzh_member_coupon where userid=a.id) as 奖励券剩余金额,
+(select sum(money) from lzh_member_hongbao where activityid=6 and userid=a.id) as 活动奖励金额,
+(select count(id) from lzh_members where recommend_id=a.id and reg_time BETWEEN 1429718400 and 1431219600) as 推荐会员数量,
+(select user_name from lzh_members where id=a.recommend_id) as 推荐人,
+(select real_name from lzh_member_info where uid=a.recommend_id) as 推荐人真实姓名,
+(select sum(investor_capital) from lzh_borrow_investor where investor_uid=a.recommend_id)+
+(select sum(investor_capital) from lzh_transfer_borrow_investor where investor_uid=a.recommend_id) as 推荐人投资金额,
+(select id_status from lzh_members_status where uid=a.id) as 实名认证
+from lzh_members a LEFT JOIN lzh_member_info b  on a.id=b.uid
+where a.reg_time
+ BETWEEN 1429718400 and 1431219600 
+order by a.reg_time 
+
+
+
+
+//查询时间段内投资金额大于2000
+(
+select 
+a.id,
+a.user_name as 用户名,
+b.real_name as 真实姓名,
+a.user_phone as 手机号,
+b.idcard as 身份证号,
+(select max(investor_capital) from lzh_borrow_investor where investor_uid=a.id) as 个人投资, 
+"" as 企业投资,
+FROM_UNIXTIME(c.add_time, '%Y年%m月%d' ) as 个人标,
+"" as 企业标,
+(select user_name from lzh_members where id=a.recommend_id) as 推荐人,
+(select real_name from lzh_member_info where uid=a.recommend_id) as 推荐人真实姓名
+from lzh_members a 
+LEFT JOIN lzh_member_info b  on a.id=b.uid
+left JOIN lzh_borrow_investor c on a.id=c.investor_uid
+
+where c.add_time > '1432742400' AND c.add_time < '1435679999' and c.investor_capital>2000
+GROUP BY a.id
+order by a.id
+)
+union all
+(
+select 
+a.id,
+a.user_name as 用户名,
+b.real_name as 真实姓名,
+a.user_phone as 手机号,
+b.idcard as 身份证号,
+"" as 个人投资,
+(select max(investor_capital) from lzh_transfer_borrow_investor where investor_uid=a.id)  as 企业投资,
+"" as 个人标,
+FROM_UNIXTIME(d.add_time, '%Y年%m月%d' ) as 企业标,
+(select user_name from lzh_members where id=a.recommend_id) as 推荐人,
+(select real_name from lzh_member_info where uid=a.recommend_id) as 推荐人真实姓名
+from lzh_members a 
+LEFT JOIN lzh_member_info b  on a.id=b.uid
+left JOIN lzh_transfer_borrow_investor d on a.id=d.investor_uid
+where d.add_time > '1432742400' AND d.add_time < '1435679999' and d.investor_capital>2000
+GROUP BY a.id
+order by a.id
+
+)order by id
+
+
+/*查询用户累计投资和充值总额*/
+select 
+a.id,
+a.user_name as 用户名,
+b.real_name as 真实姓名,
+a.user_phone as 手机号,
+b.idcard as 身份证号,
+(
+select case when (select sum(investor_capital) from lzh_borrow_investor where investor_uid=a.id) is null then 0 
+else (select sum(investor_capital) from lzh_borrow_investor where investor_uid=a.id)end)+
+(select case when (select sum(investor_capital) from lzh_transfer_borrow_investor where investor_uid=a.id) is  null then 0 
+else (select sum(investor_capital) from lzh_transfer_borrow_investor where investor_uid=a.id)end) as 企业 ,
+(select sum(affect_money) from lzh_member_moneylog where type=3 and uid=a.id) as 充值总额 
+from lzh_members a 
+LEFT JOIN lzh_member_info b  on a.id=b.uid
+left JOIN lzh_borrow_investor c on a.id=c.investor_uid
+LEFT JOIN lzh_transfer_borrow_investor d on a.id=d.investor_uid
+group by a.id
+order by a.id
+/*单次投资大于2w5w10w*/
+select * from (
+
+
+SELECT b.id,b.user_name,c.real_name,b.user_phone,a.investor_capital FROM `lzh_borrow_investor` a 
+LEFT JOIN lzh_members b on a.investor_uid=b.id 
+LEFT JOIN lzh_member_info c on a.investor_uid=c.uid
+ ) a
+where id not in (
+SELECT b.id FROM `lzh_borrow_investor` a 
+LEFT JOIN lzh_members b on a.investor_uid=b.id 
+ WHERE a.investor_capital >= '100000'  
+
+) and investor_capital>='50000'
+
+
+SELECT b.id,b.user_name,c.real_name,b.user_phone,a.investor_capital FROM `lzh_borrow_investor` a 
+LEFT JOIN lzh_members b on a.investor_uid=b.id 
+LEFT JOIN lzh_member_info c on a.investor_uid=c.uid
+where a.investor_capital>='20000' 
+
+
+13031710688  1888
